@@ -1,21 +1,18 @@
 using DifferentialEquations, Plots, LaTeXStrings
 
+# Parameters
+T = 600 # final time
+p = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0]
+#    α,   β₁,  β₂,  βᵤ,  γ,   λ,      μ,     ρ,    b,    c₁,  c₂,  d, r,    y₁,  y₂
+
+# Matching parameters and functions
 η = 0.5
 μ = 0.072
+P(Θ) = μ*Θ^(1-η)
+Q(Θ) = μ*Θ^(-η)
 
-function P(Θ)
-    return μ*Θ^(1-η)
-end
-
-function Q(Θ)
-    return μ*Θ^(-η)
-end
-
-function Qprime(Θ)
-    return -η*μ*Θ^(-1-η)
-end
-
-function myode(du, u, p, t)
+# System of ODEs
+function epiecon_ode(du, u, p, t)
     S₁,I₁,R₁,S₂,I₂,R₂,Sᵤ,Iᵤ,Rᵤ,Θ₁,Θ₂ = u
     α,β₁,β₂,βᵤ,γ,λ,μ,ρ,b,c₁,c₂,d,r,y₁,y₂ = p
 
@@ -31,31 +28,20 @@ function myode(du, u, p, t)
     du[10] = dΘ₁ = P(Θ₁)*((1-α)*(y₁-b-d*(β₁-βᵤ)*(I₁+I₂+Iᵤ)) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₁*(r+λ)/Q(Θ₁))/(c₁*η)
     du[11] = dΘ₂ = P(Θ₂)*((1-α)*(y₂-b-d*(β₂-βᵤ)*(I₁+I₂+Iᵤ)) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₂*(r+λ)/Q(Θ₂))/(c₂*η)
 end
+tspan = (0,T)
 
-tspan = (0,400)
-p = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0]
-#    α,  β₁,   β₂,  βᵤ,  γ,   λ,      μ,     ρ,    b,    c₁,  c₂,  d, r,    y₁,  y₂
-
-# No infection
+# Disease free dynamics
 u₀ = [0.905, 0.0, 0.0, 0.07, 0.0, 0.0, 0.025, 0.0, 0.0, 2.8, 0.0165]
-e0 = rand()
-g0 = rand()
-u0 = rand()
-t0 = e0+u0+g0
-e0 = e0/t0
-g0 = g0/t0
-u0 = u0/t0
-# u₀ = [e0, 0.0, 0.0, g0, 0.0, 0.0, u0, 0.0, 0.0, 10*rand(), 10*rand()]
-prob = ODEProblem(myode, u₀, tspan, p)
+prob = ODEProblem(epiecon_ode, u₀, tspan, p)
 sol = solve(prob,saveat=1)
-E0 = sol[1,:]+sol[2,:]+sol[3,:]
-G0 = sol[4,:]+sol[5,:]+sol[6,:]
-U0 = sol[7,:]+sol[8,:]+sol[9,:]
-Θe0 = sol[10,:]
-Θg0 = sol[11,:]
+E_DF = sol[1,:]+sol[2,:]+sol[3,:]
+G_DF = sol[4,:]+sol[5,:]+sol[6,:]
+U_DF = sol[7,:]+sol[8,:]+sol[9,:]
+Θe_DF = sol[10,:]
+Θg_DF = sol[11,:]
 
-# Infection
-u₀ = [0.905*0.99, 0.905*0.01, 0.0, 0.07, 0.0, 0.0, 0.025, 0.0, 0.0, 2.8, 0.0165]
+# 1% initially infectedInfection
+u₀ = [0.905*0.99, 0.905*0.01, 0.0, 0.07*0.99, 0.07*0.01, 0.0, 0.025*0.99, 0.025*0.01, 0.0, 2.8, 0.0165]
 prob = ODEProblem(myode, u₀, tspan, p)
 sol = solve(prob,saveat=1)
 E = sol[1,:]+sol[2,:]+sol[3,:]
@@ -77,16 +63,16 @@ R = sol[3,:]+sol[6,:]+sol[9,:]
 
 # plot(pe,pg,pu,layout=(3,1))
 
-pe=plot([E,E0],label=["E" "E0"],legend=:outerright)
-pg=plot([G,G0],label=["G" "G0"],legend=:outerright)
-pu=plot([U,U0],label=["U" "U0"],legend=:outerright)
-psir=plot([S,I,R],label=["S" "I" "R"],legend=:outerright)
+pe=plot([E_DF,E],label=[L"E^{DF}" L"E"],xlabel=L"t",legend=:outerright)
+pg=plot([G_DF,G],label=[L"G^{DF}" L"G"],xlabel=L"t",legend=:outerright)
+pu=plot([U_DF,U],label=[L"U^{DF}" L"U"],xlabel=L"t",legend=:outerright)
+psir=plot([S,I,R],label=[L"S" L"I" L"R"],xlabel=L"t",legend=:outerright)
 
-ptightE=plot([Θe,Θe0],label=[L"\Theta_e^{EE}" L"\Theta_e^{DFE}"],legend=:outerright)
-ptightG=plot([Θg,Θg0],label=["Θg" "Θg0"],legend=:outerright)
+ptightE=plot([Θe_DF,Θe],label=[L"\Theta_e^{DF}" L"\Theta_e"],xlabel=L"t",legend=:outerright)
+ptightG=plot([Θg_DF,Θg],label=[L"\Theta_g^{DF}" L"\Theta_g"],xlabel=L"t",legend=:outerright)
 
 plot(pe,pg,pu,psir,ptightE,ptightG,layout=(3,2))
-savefig("timeseries_b71.pdf")
+savefig("timeseries.pdf")
 
 # plot(ptightE,ptightG,layout=(2,1))
 # savefig("tightness.pdf")
