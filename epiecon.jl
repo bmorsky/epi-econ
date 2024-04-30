@@ -3,7 +3,7 @@ using DifferentialEquations, Plots, LaTeXStrings
 # Parameters
 T = 600 # final time
 p = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0, 0]
-p_gig = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0, 0.1]
+p_gig = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0, 0.01]
 #    α,   β₁,  β₂,  βᵤ,  γ,   λ,      μ,     ρ,    b,    c₁,  c₂,  d, r,    y₁,  y₂
 
 # Matching parameters and functions
@@ -81,13 +81,13 @@ R_gig = sol[3,:]+sol[6,:]+sol[9,:]-R
 Θe_gig = sol[10,:]
 Θg_gig = sol[11,:]
 
-pe_gig=plot([E_gig,E],label=[L"E^*" L"E"],xlabel=L"t",legend=:outerright)
-pg_gig=plot([G_gig,G],label=[L"G^*" L"G"],xlabel=L"t",legend=:outerright)
-pu_gig=plot([U_gig,U],label=[L"U^*" L"U"],xlabel=L"t",legend=:outerright)
+pe_gig=plot([E_DF,E,E_gig],label=[L"E^{DF}" L"E" L"E^*"],xlabel=L"t",legend=:outerright)
+pg_gig=plot([G_DF,G,G_gig],label=[L"G^{DF}" L"G" L"G^*"],xlabel=L"t",legend=:outerright)
+pu_gig=plot([U_DF,U,U_gig],label=[L"U^{DF}" L"U" L"U^*"],xlabel=L"t",legend=:outerright)
 psir_gig=plot([S_gig,I_gig,R_gig],label=[L"\Delta S" L"\Delta I" L"\Delta R"],xlabel=L"t",legend=:outerright)
 
-ptightE_gig=plot([Θe_gig,Θe],label=[L"\Theta_e^*" L"\Theta_e"],xlabel=L"t",legend=:outerright)
-ptightG_gig=plot([Θg_gig,Θg],label=[L"\Theta_g^*" L"\Theta_g"],xlabel=L"t",legend=:outerright)
+ptightE_gig=plot([Θe_DF,Θe,Θe_gig],label=[L"\Theta_e^{DF}" L"\Theta_e" L"\Theta_e^*"],xlabel=L"t",legend=:outerright)
+ptightG_gig=plot([Θg_DF,Θg,Θe_gig],label=[L"\Theta_g^{DF}" L"\Theta_g" L"\Theta_g^*"],xlabel=L"t",legend=:outerright)
 
 plot(pe_gig,pg_gig,pu_gig,psir_gig,ptightE_gig,ptightG_gig,layout=(3,2))
 savefig("timeseries_gig_benefits.pdf")
