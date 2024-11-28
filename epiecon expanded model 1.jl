@@ -51,7 +51,7 @@ function epiecon_ode(du, u, p, t)
     end
 
     # Initial guess for the variables
-    initial_guess = [200, 200, 200, 200, 200, 200, 200, 200, 200, 1.0, 0.1]
+    initial_guess = [250, 250, 250, 250, 250, 250, 250, 250, 250, 2.0, 0.05]
 
     # Solve the system
     result = nlsolve(equations, initial_guess)
@@ -108,7 +108,7 @@ function save_theta!(u, t, integrator)
         F[11] = ((r + λ)*c₂/Q(Θ₂) + (1 − α)*(b − y₂) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₂ - βᵤ)*I*(Vus − Vui) + (1-α)*(1-τ)*ρ*(Vgr-Vur − Vgs+Vus)/α) + (1-α)*τ*β₂*I*(Vgs-Vus − Vgi+Vui)/α
     end
 
-    initial_guess = [200, 200, 200, 200, 200, 200, 200, 200, 200, 1.0, 0.1]
+    initial_guess = [250, 250, 250, 250, 250, 250, 250, 250, 250, 2.0, 0.05]
     result = nlsolve(equations, initial_guess)
     Θ₁ = abs(result.zero[10])
     Θ₂ = abs(result.zero[11])
