@@ -1,17 +1,17 @@
-using DifferentialEquations, Plots, LaTeXStrings, NLsolve, DiffEqCallbacks, OrdinaryDiffEq, LinearAlgebra, ForwardDiff
+using DifferentialEquations, Plots, LaTeXStrings, NLsolve, DiffEqCallbacks, OrdinaryDiffEq, LinearAlgebra
 
 # Parameters
-T = 601 # final time
+T = 600 # final time
 #    α,   β₁,  β₂,  βᵤ,  γ,    λ,      μ,     ρ,    b,    c₁,  c₂,  d, r,    y₁,  y₂,  bg
-p = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 0.05, 0.02, 1.02, 1.0, 0.0]
+p = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0, 0.0]
 p_gig = [0.5, 0.4, 0.3, 0.2, 1/7, 0.0033, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0, 0.01]
 p_quar = [0.5, 0.4, 0.3, 0.2, 1/7, 1.5*0.0033, 0.0033, 0.072, 0.01, 0.71, 0.1, 0.1, 1, 0.02, 1.1, 1.0, 0.0]
 
 # Matching parameters and functions
 η = 0.5
 μ = 0.072
-P(Θ) = μ*Θ^(1-η)
-Q(Θ) = μ*Θ^(-η)
+P(Θ) = μ*abs(Θ)^(1-η)
+Q(Θ) = μ*abs(Θ)^(-η)
 
 # System of ODEs
 function epiecon_ode(du, u, p, t)
@@ -26,48 +26,54 @@ function epiecon_ode(du, u, p, t)
     # Define the system of equations
     function equations(F, vars)
 
-        Ves, Vgs, Vei, Vgi, Ver, Vgr, Vus, Vui, Vur, Θ₁, Θ₂ = vars
+        z1,z2,z3,z4,z5,z6,z7,z8 = vars
 
-        Sudot = ρ*Rᵤ - βᵤ*Sᵤ*(I₁+I₂+Iᵤ) - (P(Θ₁)+P(Θ₂))*Sᵤ + λ*S₁+λ*S₂
-        Rudot = γ*Iᵤ - ρ*Rᵤ - (P(Θ₁)+P(Θ₂))*Rᵤ + λ*R₁ + λ*R₂
-        taudot = (Rᵤ*Sudot - Sᵤ*Rudot)/(Sᵤ+Rᵤ)^2
+        Vfes = z1
+        Vfgs = z2
+        Vfei = z3
+        Vfgi = z4
+        Vfer = z5
+        Vfgr = z6
+        Θ₁ = abs(z7)
+        Θ₂ = abs(z8)
+
+        # Vfes, Vfgs, Vfei, Vfgi, Vfer, Vfgr, Θ₁, Θ₂ = vars
+
+        Γs = P(Θ₁)*Vfes + P(Θ₂)*Vfgs
+        Γr = P(Θ₁)*Vfer + P(Θ₂)*Vfgr
+        VusVui = ((1-α)*d*(r+ρ) + α*((r+λ+ρ)*Γs - γ*Γr))/((1-α)*((r+γ)*(r+ρ) + (r+λ+ρ)*βᵤ*I))
 
         # Wages
-        Vfes = (Ves-Vus)*(1 − α)/α
-        Vfgs = (Vgs-Vus)*(1 − α)/α
-        Vfei = (Vei-Vui)*(1 − α)/α
-        Vfgi = (Vgi-Vui)*(1 − α)/α
-        Vfer = (Ver-Vur)*(1 − α)/α
-        Vfgr = (Vgr-Vur)*(1 − α)/α
-        Wes = α*y₁ + (1 - α)*b + (1 − α)*(β₁ - βᵤ)*I*(Vus - Vui) + α*(P(Θ₁)*Vfes + P(Θ₂)*Vfgs)
+        Wes = α*y₁ + (1 - α)*b + (1 − α)*(β₁ - βᵤ)*I*(VusVui) + α*Γs
         Wer = α*y₁ + (1 - α)*b + α*(P(Θ₁)*Vfer + P(Θ₂)*Vfgr)
-        Wgs = α*y₂ + (1 - α)*b + (1 − α)*(β₂ - βᵤ)*I*(Vus - Vui) + α*(P(Θ₁)*Vfes + P(Θ₂)*Vfgs)
+        Wgs = α*y₂ + (1 - α)*b + (1 − α)*(β₂ - βᵤ)*I*(VusVui) + α*Γs
         Wgr = α*y₂ + (1 - α)*b + α*(P(Θ₁)*Vfer + P(Θ₂)*Vfgr)
         Wi = (1 − α)*b
 
-        F[1] = Wes - β₁*I*(Ves - Vei) - λ*(Ves - Vus) - r*Ves
-        F[2] = Wgs - β₂*I*(Vgs - Vei) - λ*(Vgs - Vus) - r*Vgs
-        F[3] = Wi - d - γ*(Vei - Ver) - λ*(Vei - Vui) - r*Vei
-        F[4] = Wi - d - γ*(Vgi - Vgr) - λ*(Vgi - Vui) - r*Vgi
-        F[5] = Wer - ρ*(Ver - Ves) - λ*(Ver - Vur) - r*Ver
-        F[6] = Wgr - ρ*(Vgr - Vgs) - λ*(Vgr - Vur) - r*Vgr
-        F[7] = b - βᵤ*I*(Vus - Vui) - P(Θ₁)*(Vus - Ves) - P(Θ₂)*(Vus - Vgs) - r*Vus
-        F[8] = b - d - γ*(Vui - Vur) - r*Vui
-        F[9] = b - ρ*(Vur - Vus) - P(Θ₁)*(Vur - Ver) - P(Θ₂)*(Vur - Vgr) - r*Vur
-        F[10] = (r + λ)*c₁/Q(Θ₁) + (1 − α)*(b − y₁) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₁ − βᵤ)*I*(Vus − Vui) + (1-τ)*ρ*(Vfer-Vfes) + τ*β₁*I*(Vfes-Vfei)
-        F[11] = (r + λ)*c₂/Q(Θ₂) + (1 − α)*(b − y₂) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₂ - βᵤ)*I*(Vus − Vui) + (1-τ)*ρ*(Vfgr-Vfgs) + τ*β₂*I*(Vfgs-Vfgi)
+
+        F[1] = y₁ - Wes - β₁*I*(Vfes - Vfei) - (r+λ)*Vfes
+        F[2] = y₂ - Wgs - β₂*I*(Vfgs - Vfgi) - (r+λ)*Vfgs
+        F[3] = -Wi - γ*(Vfei - Vfer) - (λ+r)*Vfei
+        F[4] = -Wi - γ*(Vfgi - Vfgr) - (λ+r)*Vfgi
+        F[5] = y₁ - Wer - ρ*(Vfer - Vfes) - (r+λ)*Vfer
+        F[6] = y₂ - Wgr - ρ*(Vfgr - Vfgs) - (r+λ)*Vfgr
+        F[7] = (r + λ)*c₁/Q(Θ₁) + (1 − α)*(b − y₁) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₁ − βᵤ)*I*(VusVui) + (1-τ)*ρ*(Vfer-Vfes) + τ*β₁*I*(Vfes-Vfei)
+        F[8] = (r + λ)*c₂/Q(Θ₂) + (1 − α)*(b − y₂) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₂ - βᵤ)*I*(VusVui) + (1-τ)*ρ*(Vfgr-Vfgs) + τ*β₂*I*(Vfgs-Vfgi)
     end
 
     # Initial guess for the variables
-    initial_guess = [300, 300, 300, 300, 300, 300, 300, 300, 300, 2.0, 0.01]
+    initial_guess = [250, 250, 250, 250, 250, 250, 2.5, 0.00001]
 
     # Solve the system
-    result = nlsolve(equations, initial_guess, iterations = 10000)
+    result = nlsolve(equations, initial_guess, ftol = 1e-12)
 
-    Θ₁ = result.zero[10]
-    Θ₂ = result.zero[11]
+    # Θ₁ = abs(result.zero[7])
+    # Θ₂ = abs(result.zero[8])
 
-    du[1] = dS₁ = ρ*R₁ - β₁*S₁*(I₁+I₂+Iᵤ) + P(Θ₁)*Sᵤ - λ*S₁ #(1+cos(2*pi*t/1000))
+    Θ₁ = abs(result.zero[7])
+    Θ₂ = abs(result.zero[8])
+
+    du[1] = dS₁ = ρ*R₁ - β₁*S₁*(I₁+I₂+Iᵤ) + P(Θ₁)*Sᵤ - λ*S₁
     du[2] = dI₁ = β₁*S₁*(I₁+I₂+Iᵤ) - (γ+λ)*I₁ #+ P(Θ₁)*Iᵤ
     du[3] = dR₁ = γ*I₁ - ρ*R₁ + P(Θ₁)*Rᵤ - λ*R₁
     du[4] = dS₂ = ρ*R₂ - β₂*S₂*(I₁+I₂+Iᵤ) + P(Θ₂)*Sᵤ - λ*S₂
@@ -92,43 +98,46 @@ function save_theta!(u, t, integrator)
     # Define the system of equations
     function equations(F, vars)
 
-        Ves, Vgs, Vei, Vgi, Ver, Vgr, Vus, Vui, Vur, Θ₁, Θ₂ = vars
+        # Vfes, Vfgs, Vfei, Vfgi, Vfer, Vfgr, Θ₁, Θ₂ = vars
 
-        Sudot = ρ*Rᵤ - βᵤ*Sᵤ*(I₁+I₂+Iᵤ) - (P(Θ₁)+P(Θ₂))*Sᵤ + λ*S₁+λ*S₂
-        Rudot = γ*Iᵤ - ρ*Rᵤ - (P(Θ₁)+P(Θ₂))*Rᵤ + λ*R₁ + λ*R₂
-        taudot = (Rᵤ*Sudot - Sᵤ*Rudot)/(Sᵤ+Rᵤ)^2
+        z1,z2,z3,z4,z5,z6,z7,z8 = vars
+
+        Vfes = z1
+        Vfgs = z2
+        Vfei = z3
+        Vfgi = z4
+        Vfer = z5
+        Vfgr = z6
+        Θ₁ = abs(z7)
+        Θ₂ = abs(z8)
+
+        Γs = P(Θ₁)*Vfes + P(Θ₂)*Vfgs
+        Γr = P(Θ₁)*Vfer + P(Θ₂)*Vfgr
+        VusVui = ((1-α)*d*(r+ρ) + α*((r+λ+ρ)*Γs - γ*Γr))/((1-α)*((r+γ)*(r+ρ) + (r+λ+ρ)*βᵤ*I))
 
         # Wages
-        Vfes = (Ves-Vus)*(1 − α)/α
-        Vfgs = (Vgs-Vus)*(1 − α)/α
-        Vfei = (Vei-Vui)*(1 − α)/α
-        Vfgi = (Vgi-Vui)*(1 − α)/α
-        Vfer = (Ver-Vur)*(1 − α)/α
-        Vfgr = (Vgr-Vur)*(1 − α)/α
-        Wes = α*y₁ + (1 - α)*b + (1 − α)*(β₁ - βᵤ)*I*(Vus - Vui) + α*(P(Θ₁)*Vfes + P(Θ₂)*Vfgs)
+        Wes = α*y₁ + (1 - α)*b + (1 − α)*(β₁ - βᵤ)*I*(VusVui) + α*Γs
         Wer = α*y₁ + (1 - α)*b + α*(P(Θ₁)*Vfer + P(Θ₂)*Vfgr)
-        Wgs = α*y₂ + (1 - α)*b + (1 − α)*(β₂ - βᵤ)*I*(Vus - Vui) + α*(P(Θ₁)*Vfes + P(Θ₂)*Vfgs)
+        Wgs = α*y₂ + (1 - α)*b + (1 − α)*(β₂ - βᵤ)*I*(VusVui) + α*Γs
         Wgr = α*y₂ + (1 - α)*b + α*(P(Θ₁)*Vfer + P(Θ₂)*Vfgr)
         Wi = (1 − α)*b
 
-        F[1] = Wes - β₁*I*(Ves - Vei) - λ*(Ves - Vus) - r*Ves
-        F[2] = Wgs - β₂*I*(Vgs - Vei) - λ*(Vgs - Vus) - r*Vgs
-        F[3] = Wi - d - γ*(Vei - Ver) - λ*(Vei - Vui) - r*Vei
-        F[4] = Wi - d - γ*(Vgi - Vgr) - λ*(Vgi - Vui) - r*Vgi
-        F[5] = Wer - ρ*(Ver - Ves) - λ*(Ver - Vur) - r*Ver
-        F[6] = Wgr - ρ*(Vgr - Vgs) - λ*(Vgr - Vur) - r*Vgr
-        F[7] = b - βᵤ*I*(Vus - Vui) - P(Θ₁)*(Vus - Ves) - P(Θ₂)*(Vus - Vgs) - r*Vus
-        F[8] = b - d - γ*(Vui - Vur) - r*Vui
-        F[9] = b - ρ*(Vur - Vus) - P(Θ₁)*(Vur - Ver) - P(Θ₂)*(Vur - Vgr) - r*Vur
-        F[10] = (r + λ)*c₁/Q(Θ₁) + (1 − α)*(b − y₁) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₁ − βᵤ)*I*(Vus − Vui) + (1-τ)*ρ*(Vfer-Vfes) + τ*β₁*I*(Vfes-Vfei)
-        F[11] = (r + λ)*c₂/Q(Θ₂) + (1 − α)*(b − y₂) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₂ - βᵤ)*I*(Vus − Vui) + (1-τ)*ρ*(Vfgr-Vfgs) + τ*β₂*I*(Vfgs-Vfgi)
+
+        F[1] = y₁ - Wes - β₁*I*(Vfes - Vfei) - (r+λ)*Vfes
+        F[2] = y₂ - Wgs - β₂*I*(Vfgs - Vfgi) - (r+λ)*Vfgs
+        F[3] = -Wi - γ*(Vfei - Vfer) - (λ+r)*Vfei
+        F[4] = -Wi - γ*(Vfgi - Vfgr) - (λ+r)*Vfgi
+        F[5] = y₁ - Wer - ρ*(Vfer - Vfes) - (r+λ)*Vfer
+        F[6] = y₂ - Wgr - ρ*(Vfgr - Vfgs) - (r+λ)*Vfgr
+        F[7] = (r + λ)*c₁/Q(Θ₁) + (1 − α)*(b − y₁) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₁ − βᵤ)*I*(VusVui) + (1-τ)*ρ*(Vfer-Vfes) + τ*β₁*I*(Vfes-Vfei)
+        F[8] = (r + λ)*c₂/Q(Θ₂) + (1 − α)*(b − y₂) + α*(c₁*Θ₁ + c₂*Θ₂) + τ*(1-α)*(β₂ - βᵤ)*I*(VusVui) + (1-τ)*ρ*(Vfgr-Vfgs) + τ*β₂*I*(Vfgs-Vfgi)
     end
 
-    initial_guess = [300, 300, 300, 300, 300, 300, 300, 300, 300, 2.0, 0.01]
-    result = nlsolve(equations, initial_guess, iterations = 10000)
-    
-    Θ₁ = result.zero[10]
-    Θ₂ = result.zero[11]
+    initial_guess = [250, 250, 250, 250, 250, 250, 2.5, 0.00001]
+    result = nlsolve(equations, initial_guess, ftol = 1e-12)
+
+    Θ₁ = abs(result.zero[7])
+    Θ₂ = abs(result.zero[8])
 
     # Save time and Θ values
     return [Θ₁ Θ₂]
@@ -137,9 +146,9 @@ end
 # Disease free dynamics
 u₀ = [0.905, 0.0, 0.0, 0.07, 0.0, 0.0, 0.025, 0.0, 0.0]
 saved_values = SavedValues(Float64, Array{Float64, 2})
-save_cb = SavingCallback(save_theta!, saved_values, saveat=0:1:T)
+save_cb = SavingCallback(save_theta!, saved_values, saveat=1:1:T)
 prob = ODEProblem(epiecon_ode, u₀, tspan, p)
-sol = solve(prob,saveat=0:1:T, callback=save_cb)
+sol = solve(prob,saveat=1:1:T, callback=save_cb)
 Θe_DF, Θg_DF = zeros(T), zeros(T)
 for i=1:T
     Θe_DF[i] = saved_values.saveval[i][1]
@@ -151,11 +160,11 @@ G_DF = sol[4,:]+sol[5,:]+sol[6,:]
 U_DF = sol[7,:]+sol[8,:]+sol[9,:]
 
 # 1% initially infected
-u₀ = [0.905*0.999, 0.905*0.001, 0.0, 0.07*0.999, 0.07*0.001, 0.0, 0.025*0.999, 0.025*0.001, 0.0]
+u₀ = [0.905*0.99, 0.905*0.01, 0.0, 0.07*0.99, 0.07*0.01, 0.0, 0.025*0.99, 0.025*0.01, 0.0]
 saved_values = SavedValues(Float64, Array{Float64, 2})
-save_cb = SavingCallback(save_theta!, saved_values, saveat=0:1:T)
+save_cb = SavingCallback(save_theta!, saved_values, saveat=1:1:T)
 prob = ODEProblem(epiecon_ode, u₀, tspan, p)
-sol = solve(prob, saveat=0:1:T, callback=save_cb)
+sol = solve(prob, saveat=1:1:T, callback=save_cb)
 Θe, Θg = zeros(T), zeros(T)
 for i=1:T
     Θe[i] = saved_values.saveval[i][1]
