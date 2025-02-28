@@ -1,19 +1,12 @@
 using Plots, LaTeXStrings
 using NLsolve, OrdinaryDiffEq
 using Parameters
-theme(:mute,
+theme(:default,
      size = (450,200),
      fontfamily = "computer modern",
      lw = 2
      )
 
-
-# Output
-E = zeros(101)
-G = zeros(101)
-U = zeros(101)
-Θe = zeros(101)
-Θg = zeros(101)
 
 # Parameters
 T = 20000.0 # final time
@@ -33,8 +26,17 @@ v₀ = [2.5, 0.001, 25, 25, 25, 25, 25, 25] # Initial guess
 
 
 # b sweep
-for (n,bs) = enumerate(0:0.0075:0.75)
-    pb = merge(p, (;b=bs))
+b_range = 0.0:0.0075:0.75
+
+E = zeros(length(b_range))
+G = similar(E)
+U = similar(E)
+Θe = similar(E)
+Θg = similar(E)
+
+
+for (n,bs) = enumerate(b_range)
+    pb = merge(p, (;b=bs,d=0.01))
 
     v = nlsolve((F,x) -> equations!(F,x,pb,u₀),v₀,ftol=1e-14)
     u = [u₀;v.zero]
@@ -46,9 +48,7 @@ for (n,bs) = enumerate(0:0.0075:0.75)
     U[n] = sol[7,end]+sol[8,end]+sol[9,end]
     Θe[n] = sol[10,end]
     Θg[n] = sol[11,end]
-    u₀ = sol[1:9,end]
-    T = 500.00
 end
-plot(0:0.0075:0.75,[E,G,U,Θe,Θg],label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"b",legend=:outerright)
+plot(b_range,[E,G,U,Θe,Θg],label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"b",legend=:outerright)
 
-savefig("Figures/sweep_b.png")
+savefig("Figures/sweep_b.pdf")
