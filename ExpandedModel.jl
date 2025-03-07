@@ -6,7 +6,7 @@ using Parameters
 p = (α = 0.5, β₁ = 0.4, β₂ = 0.3, βᵤ = 0.2, γ =  1/7,
      λ =  0.0033, μ =  0.072, ρ = 0.01, b = 0.71,
      c₁ = 0.1, c₂ = 0.1, d = 1.0, r = 0.02,
-     y₁ = 1.5,y₂ = 1.4, bg = 0.0, η = 0.5)
+     y₁ = 1.1,y₂ = 1.0, bg = 0.0, η = 0.5)
 p_gig = merge(p,(;bg = 0.01)) # Copy p but change bg
 p_quar = merge(p,(;λ = 1.5*0.0033)) # Copy p but change λ
 

@@ -1,4 +1,4 @@
-## Expanded Model 4
+## Expanded Model
 
 using Plots, LaTeXStrings
 using NLsolve, OrdinaryDiffEq
