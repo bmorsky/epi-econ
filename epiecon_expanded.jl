@@ -60,7 +60,7 @@ ptightE=plot([Θe_DF,Θe],label=[L"\Theta_e^{DF}" L"\Theta_e"],xlabel=L"t",legen
 ptightG=plot([Θg_DF,Θg],label=[L"\Theta_g^{DF}" L"\Theta_g"],xlabel=L"t",legend=:outerright)
 
 plot(pe,pg,pu,psir,ptightE,ptightG,layout=(3,2))
-savefig("Figures/timeseries.pdf")
+savefig("Figures/timeseries_expanded.pdf")
 
 # # Plot the effect of a government benefit to gig workers
 # prob = ODEProblem(epiecon_ode, u₀, tspan, p_gig)

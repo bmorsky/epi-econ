@@ -6,9 +6,8 @@ This repository contains the code used for simulations and figures in "The gig e
 <b> Updates (March 7, 2025) </b>
 
 
-- Cleaned up (removed) some old code and renamed some files
-- Fixed some small numerical issues in solving the model in epiecon.jl 
-- Consolidated all the parameter sweeps into a single file
+- Cleaned up (removed) some old code and renamed some files. Epiecon.jl is now the main model and epiecon_expanded.jl creates the figure for the expanded model
+- Fixed some small numerical issues in solving the model in epiecon.jl. I'm using Julia's bright theme for plots, but am open to other options. I would like to have colourblind friendly figures, but none of the colour schemes in those ever look good to me...
 
 
 <b> Updates (Feb 28, 2025) </b>
