@@ -3,8 +3,10 @@
 using NLsolve, OrdinaryDiffEq
 using Parameters
 
-p = (α = 0.5, β₁ = 0.4, β₂ = 0.3, βᵤ = 0.2, γ =  1/7, λ =  0.0033, μ =  0.072, ρ = 0.01,
-     b = 0.71, c₁ = 0.1, c₂ = 0.1, d = 1.0, r = 0.02, y₁ = 1.5,y₂ = 1.4,bg = 0.0,η = 0.5)
+p = (α = 0.5, β₁ = 0.4, β₂ = 0.3, βᵤ = 0.2, γ =  1/7,
+     λ =  0.0033, μ =  0.072, ρ = 0.01, b = 0.71,
+     c₁ = 0.1, c₂ = 0.1, d = 1.0, r = 0.02,
+     y₁ = 1.5,y₂ = 1.4, bg = 0.0, η = 0.5)
 p_gig = merge(p,(;bg = 0.01)) # Copy p but change bg
 p_quar = merge(p,(;λ = 1.5*0.0033)) # Copy p but change λ
 
@@ -14,7 +16,7 @@ p_quar = merge(p,(;λ = 1.5*0.0033)) # Copy p but change λ
 # System of DAEs
 function epiecon_ode!(du, u, p, t)
     S₁,I₁,R₁,S₂,I₂,R₂,Sᵤ,Iᵤ,Rᵤ,Θ₁,Θ₂,Vfes,Vfgs,Vfei,Vfgi,Vfer,Vfgr= u
-    @unpack α,β₁,β₂,βᵤ,γ,λ,μ,ρ,b,c₁,c₂,d,r,y₁,y₂,η,μ = p # Unpack macro to assign appropriate values to parameters
+    @unpack α,β₁,β₂,βᵤ,γ,λ,μ,ρ,b,c₁,c₂,d,r,y₁,y₂,η = p # Unpack macro to assign appropriate values to parameters
 
     Iₜ = I₁ + I₂ + Iᵤ
     τ = Sᵤ/(Sᵤ+Rᵤ)
@@ -60,11 +62,13 @@ end
 
 # Algebraic Equations
 function equations!(F, vars, p,u)
-    @unpack α,β₁,β₂,βᵤ,γ,λ,μ,ρ,b,c₁,c₂,d,r,y₁,y₂ = p
+    @unpack α,β₁,β₂,βᵤ,γ,λ,μ,ρ,b,c₁,c₂,d,r,y₁,y₂,η = p
     τ = u[7]/(u[7]+u[9])
     I₀ = sum(u[[2,5,8]])
     Θ₁,Θ₂,Vfes,Vfgs,Vfei,Vfgi,Vfer,Vfgr = vars
 
+    P(Θ) = μ*abs(Θ)^(1-η)
+    Q(Θ) = μ*abs(Θ)^(-η)
 
     # Vfes, Vfgs, Vfei, Vfgi, Vfer, Vfgr, Θ₁, Θ₂ = vars
 

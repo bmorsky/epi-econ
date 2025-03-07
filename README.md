@@ -3,6 +3,14 @@
 
 This repository contains the code used for simulations and figures in "The gig economy during an epidemic: coupling disease transmission with labour market dynamics" (20??). 
 
+<b> Updates (March 7, 2025) </b>
+
+
+- Cleaned up (removed) some old code and renamed some files
+- Fixed some small numerical issues in solving the model in epiecon.jl 
+- Consolidated all the parameter sweeps into a single file
+
+
 <b> Updates (Feb 28, 2025) </b>
 
 - Started working on the sensitivity analysis. Ran into some issues with $V_{fgs} and $V_{fgr}$ becoming negative, which caused problems calculating $\Theta_g$. 
