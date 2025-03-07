@@ -8,9 +8,8 @@ This repository contains the code used for simulations and figures in "The gig e
 
 - Cleaned up (removed) some old code and renamed some files. model.jl now contains the main model, epiecon.jl creates the time-series figures for the main model, and epiecon_expanded.jl creates the figure for the expanded model. 
 - Fixed some small numerical issues in solving the model. I'm using Julia's Wong theme for plots, since it is colourblind friendly and looks pretty okay. 
-- Sensitivity analysis is up and running for the basic model. Comparing the effects of $b,d,bg,\lambda_1,$ and $\lambda_2$ on $U_\infty,U_{max},I_\infty$ and $I_{max}$, where $I_\infty = \lim_{t\to\infty}I(t)$ and $I_{max} = \max\{I(t): t\ge 0\}$
-- Parameter sweeps organized into a single file and completed for parameters 
-
+- Sensitivity analysis is up and running for the basic model. Comparing the effects of $b,d,bg,\lambda_1,$ and $\lambda_2$ on $U_\infty,U_{max},I_\infty$ and $I_{max}$, where $I_\infty = \lim_{t\to\infty}I(t)$ and $I_{max} = \max \{ I(t): t\ge 0 \} $
+- Parameter sweeps organized into a single file and completed for parameters $b,d,\beta_e,\beta_g,\beta_u,\gamma$ and $\rho$.
 
 <b> Updates (Feb 28, 2025) </b>
 
