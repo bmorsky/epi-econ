@@ -2,6 +2,12 @@
 
 using Plots, LaTeXStrings
 
+using Plots, LaTeXStrings
+theme(:wong, lw = 2,
+     size = (600,320),
+     fontfamily = "Computer Modern",
+     )
+
 # Output
 
 E = Float64[]
@@ -37,33 +43,33 @@ function sweep(tag,vals)
     return [E,G,U,Θe,Θg]
 end
 
-bs = 0.01:0.01:0.75
+bs = 0.05:0.01:0.75
 bsweep = sweep("b",bs)
-sweep_b=plot(bs,bsweep,label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"b",legend=:outerright)
+sweep_b=plot(bs,bsweep,label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"b",legend=:outerright,yaxis=:log2)
+
+ds = 0.01:0.01:2
+dsweep = sweep("d",ds)
+sweep_d=plot(ds,dsweep,label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"d",legend=:outerright,yaxis=:log2)
 
 β2s = 0.2:0.001:0.4
 βg_sweep = sweep("β₂",β2s)
-sweep_betag=plot(β2s,βg_sweep,label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\beta_g",legend=:outerright)
-
-ds = 0.0:0.01:1.0
-dsweep= sweep("d",ds)
-sweep_d=plot(ds,dsweep,label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"d",legend=:outerright)
+sweep_betag=plot(β2s,βg_sweep,label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\beta_g",legend=:outerright,yaxis=:log2)
 
 β1s = 0.3:0.001:0.6
 βe_sweep = sweep("β₁",β1s)
-sweep_betae= plot(β1s,βe_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\beta_e",legend=:outerright)
+sweep_betae= plot(β1s,βe_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\beta_e",legend=:outerright,yaxis=:log2)
 
 βus = 0.1:0.001:0.3
 βu_sweep = sweep("βᵤ",βus)
-sweep_betau= plot(βus,βu_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\beta_u",legend=:outerright)
+sweep_betau= plot(βus,βu_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\beta_u",legend=:outerright,yaxis=:log2)
 
 γs = 0.01:0.001:0.25
 γ_sweep = sweep("γ",γs)
-sweep_gamma = plot(γs,γ_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\gamma",legend=:outerright)
+sweep_gamma = plot(γs,γ_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\gamma",legend=:outerright,yaxis=:log2)
 
 ρs = 0.002:0.00001:0.025
 ρ_sweep = sweep("ρ",ρs)
-sweep_rho = plot(ρs,ρ_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\rho",legend=:outerright)
+sweep_rho = plot(ρs,ρ_sweep,label = [L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"\rho",legend=:outerright,yaxis=:log2)
 
-plot(sweep_b,sweep_betae,sweep_betag,sweep_betau,sweep_gamma,sweep_rho,layout=(3,2))
-savefig("Figures/sweep.pdf")
+plot(sweep_b,sweep_d,sweep_betae,sweep_betag,sweep_betau,sweep_gamma,sweep_rho,layout=(4,2), size = (600,600))
+savefig("sweep.pdf")
