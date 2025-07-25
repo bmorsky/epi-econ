@@ -8,6 +8,7 @@ theme(:wong, lw = 2,
      fontfamily = "Computer Modern",
      )
 
+=======
 # Output
 E = zeros(101)
 G = zeros(101)
