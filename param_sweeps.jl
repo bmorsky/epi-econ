@@ -45,6 +45,7 @@ sweep_b=plot(0:0.0075:0.75,[E,G,U,Θe,Θg],label=[L"E" L"G" L"U" L"\Theta_e" L"\
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 bs = 0.05:0.01:0.75
 bsweep = sweep("b",bs)
 sweep_b=plot(bs,bsweep,label=[L"E" L"G" L"U" L"\Theta_e" L"\Theta_g"],xlabel=L"b",legend=:outerright,yaxis=:log2)
