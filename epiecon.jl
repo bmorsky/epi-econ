@@ -8,10 +8,16 @@ theme(:wong, lw = 2,
 
 include("model.jl")
 
-u₀ = [0.905, 0.0, 0.0, 0.07, 0.0, 0.0, 0.025, 0.0, 0.0, 2.8, 0.0165]
+# SE₀ = 0.6952963393033211
+# SG₀ = 0.2927627630587767
+# SU₀ = 1-SE₀-SG₀
+# Θ1₀ = 7.122440367021995
+# Θ2₀ = 1.2627594018019614
+
+u₀ = [SE₀, 0.0, 0.0, SG₀, 0.0, 0.0, SU₀, 0.0, 0.0, Θ1₀, Θ2₀]
 # u₀ = [0.905, 0.0, 0.0, 0.07, 0.0, 0.0, 0.025, 0.0, 0.0]
 prob = ODEProblem(epiecon, u₀, tspan, p)
-sol = solve(prob,saveat=0.1,abstol=1e-12)
+sol = solve(prob,saveat=0.1, RadauIIA5(), reltol=1e-8, abstol=1e-8)
 E_DF = sol[1,:]+sol[2,:]+sol[3,:]
 G_DF = sol[4,:]+sol[5,:]+sol[6,:]
 U_DF = 1.0 .- E_DF .- G_DF
@@ -19,10 +25,10 @@ U_DF = 1.0 .- E_DF .- G_DF
 Θg_DF = sol[11,:]
 
 # 1% initially infected
-u₀ = [0.905*0.95, 0.905*0.05, 0.0, 0.07*0.95, 0.07*0.05, 0.0, 0.025*0.95, 0.025*0.05, 0.0, 2.8, 0.0165]
+u₀ = [SE₀*0.99, SE₀*0.01, 0.0, SG₀*0.99, SG₀*0.01, 0.0, SU₀*0.99, SU₀*0.01, 0.0, Θ1₀, Θ2₀]
 # u₀ = [0.905*0.95, 0.905*0.05, 0.0, 0.07*0.95, 0.07*0.05, 0.0, 0.025*0.95, 0.025*0.05, 0.0]
 prob = ODEProblem(epiecon, u₀, tspan, p)
-sol = solve(prob,saveat=0.1)
+sol = solve(prob,saveat=0.1, RadauIIA5(), reltol=1e-8, abstol=1e-8)
 E = sol[1,:]+sol[2,:]+sol[3,:]
 G = sol[4,:]+sol[5,:]+sol[6,:]
 U = 1.0 .- E .- G
@@ -50,7 +56,7 @@ savefig("timeseries.pdf")
 
 # Plot the effect of a government benefit to gig workers
 prob = ODEProblem(epiecon, u₀, tspan, p_gig)
-sol = solve(prob,saveat=0.1)
+sol = solve(prob,saveat=0.1, RadauIIA5(), reltol=1e-8, abstol=1e-8)
 E_gig = sol[1,:]+sol[2,:]+sol[3,:]
 G_gig = sol[4,:]+sol[5,:]+sol[6,:]
 U_gig = 1.0 .- E_gig .- G_gig  #sol[7,:]+sol[8,:]+sol[9,:]
@@ -77,7 +83,7 @@ savefig("timeseries_gig_benefits.pdf")
 
 # Plot the effect of a government quarantine (λ₁>λ₂)
 prob = ODEProblem(epiecon, u₀, tspan, p_quar)
-sol = solve(prob,saveat=0.1)
+sol = solve(prob,saveat=0.1, RadauIIA5(), reltol=1e-8, abstol=1e-8)
 E_quar = sol[1,:]+sol[2,:]+sol[3,:]-E
 G_quar = sol[4,:]+sol[5,:]+sol[6,:]-G
 U_quar = 1.0 .- E_quar .- G_quar-U #sol[7,:]+sol[8,:]+sol[9,:]
