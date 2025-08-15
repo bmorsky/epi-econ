@@ -1,7 +1,7 @@
 ## The gig economy during an epidemic: coupling disease transmission with labour market dynamics
 #### Bryce Morsky, Tyler Meadows, Felicia M.G. Magpantay, and Troy Day
 
-This repository contains the code used for simulations and figures in "The gig economy during an epidemic: coupling disease transmission with labour market dynamics" (20??). 
+This repository contains the code used for simulations and figures in "The gig economy during an epidemic: coupling disease transmission with labour market dynamics" (2025). 
 
 <b> Updates (March 7, 2025) </b>
 

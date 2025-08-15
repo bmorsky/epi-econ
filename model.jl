@@ -1,7 +1,7 @@
 using OrdinaryDiffEq, Parameters
 
 # Parameters
-T = 2000 # final time
+T = 600 # final time
 tspan = (0,T)
 p = (α = 0.5, β₁= 0.4, β₂ = 0.38, βᵤ = 0.36, γ = 1/5, η = 0.5, λ₁ = 0.001096, λ₂ = 0.005479,
      μ = 0.01517, ρ = 0.01, b₂ = 0.2, bᵤ = 0.4, c₁ = 0.17305498516997503, c₂ = 0.07253458196414889,
@@ -9,6 +9,7 @@ p = (α = 0.5, β₁= 0.4, β₂ = 0.38, βᵤ = 0.36, γ = 1/5, η = 0.5, λ₁
 
 p_gig = merge(p,(;b₂ = 0.21)) # Copy p but change b₂
 p_jloss = merge(p,(;λ₁ = 1.5*0.001096)) # Copy p but with changes to λ₁
+p_bu = merge(p,(;bᵤ = 0.42)) # Copy p but with changes to λ₁
 
 # Disease-free ODEs
 function econ_ode(du, u, p, t)
@@ -56,3 +57,14 @@ function epiecon_ode(du, u, p, t)
 end
 M = zeros(11,11); [M[j,j] = 1 for j in [1:8...]]
 epiecon = ODEFunction(epiecon_ode,mass_matrix=M)
+
+# Wage equations
+function W₁(i₁,Θ₁,Θ₂,p)
+    @unpack α,β₁,β₂,βᵤ,γ,η,λ₁,λ₂,μ,ρ,b₂,bᵤ,c₁,c₂,r,y₁,y₂ = p
+    return α*y₁*(1 .- i₁) .+ (1 - α)*bᵤ .+  α*c₁*Θ₁ .+ α*c₂*Θ₂
+end
+
+function W₂(i₂,Θ₁,Θ₂,p)
+    @unpack α,β₁,β₂,βᵤ,γ,η,λ₁,λ₂,μ,ρ,b₂,bᵤ,c₁,c₂,r,y₁,y₂ = p
+    (α*y₂*(1 .- i₂) .+ (1-α)*(bᵤ-b₂) .+  α*c₁*Θ₁ .+ α*c₂*Θ₂) ./ (1 .- i₂)
+end
