@@ -8,7 +8,7 @@ p = (α = 0.5, β₁= 0.4, β₂ = 0.38, βᵤ = 0.36, γ = 1/5, η = 0.5, λ₁
      r = 0.000137, y₁ = 1.014065708418891, y₂ = 0.914065708418891)
 
 p_gig = merge(p,(;b₂ = 0.21)) # Copy p but change b₂
-p_jloss = merge(p,(;λ₁ = 1.5*0.001096)) # Copy p but with changes to λ₁
+p_jloss = merge(p,(;λ₁ = 1.25*0.001096)) # Copy p but with changes to λ₁
 p_bu = merge(p,(;bᵤ = 0.42)) # Copy p but with changes to λ₁
 
 # Disease-free ODEs

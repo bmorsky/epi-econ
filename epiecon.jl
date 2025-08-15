@@ -100,15 +100,15 @@ pf_jloss=plot(t,[F_DF,F,F_jloss],label=[L"F^{DF}" L"F" L"F^L"],xlabel="",legend=
 pg_jloss=plot(t,[G_DF,G,G_jloss],label=[L"G^{DF}" L"G" L"G^L"],xlabel="",legend=:outerright)
 pu_jloss=plot(t,[U_DF,U,U_jloss],label=[L"U^{DF}" L"U" L"U^L"],xlabel="",legend=:outerright)
 psir_jloss=plot(t,[S_jloss,I_jloss,R_jloss],label=[L"\% \Delta S" L"\% \Delta I" L"\% \Delta R"],xlabel="",legend=:outerright)
-ptightF_jloss=plot(t,[Θf_DF,Θf,Θf_jloss],label=[L"\Theta_f^{DF}" L"\Theta_f" L"\Theta_f^L"],xlabel="time (days)",legend=:outerright)
-ptightG_jloss=plot(t,[Θg_DF,Θg,Θg_jloss],label=[L"\Theta_g^{DF}" L"\Theta_g" L"\Theta_g^L"],xlabel="time (days)",legend=:outerright)
-pwf_jloss=plot(t,[Wf_DF,Wf_jloss],label=[L"W_f^{DF}" L"W_f^L"],xlabel="",legend=:outerright)
-pwg_jloss=plot(t,[Wg_DF,Wg_jloss],label=[L"W_g^{DF}" L"W_g^L"],xlabel="",legend=:outerright)
+ptightF_jloss=plot(t,[Θf_DF,Θf,Θf_jloss],label=[L"\Theta_f^{DF}" L"\Theta_f" L"\Theta_f^L"],xlabel="",legend=:outerright)
+ptightG_jloss=plot(t,[Θg_DF,Θg,Θg_jloss],label=[L"\Theta_g^{DF}" L"\Theta_g" L"\Theta_g^L"],xlabel="",legend=:outerright)
+pwf_jloss=plot(t,[Wf_DF,Wf_jloss],label=[L"W_f^{DF}" L"W_f^L"],xlabel="time (days)",legend=:outerright)
+pwg_jloss=plot(t,[Wg_DF,Wg_jloss],label=[L"W_g^{DF}" L"W_g^L"],xlabel="time (days)",legend=:outerright)
 
 plot(pf_jloss,pg_jloss,pu_jloss,psir_jloss,ptightF_jloss,ptightG_jloss,pwf_jloss,pwg_jloss,layout=(4,2))
 savefig("timeseries_lambdaf.pdf")
 
-# Plot the effect of a higher job losses in the formal economy
+# Plot the effect of a higher bᵤ
 prob = ODEProblem(epiecon, u₀, tspan, p_bu)
 sol = solve(prob,saveat=0.1, RadauIIA5(), reltol=1e-8, abstol=1e-8)
 F_bu = sol[1,:]+sol[2,:]+sol[3,:]
@@ -130,10 +130,10 @@ pf_bu=plot(t,[F_DF,F,F_bu],label=[L"F^{DF}" L"F" L"F^B"],xlabel="",legend=:outer
 pg_bu=plot(t,[G_DF,G,G_bu],label=[L"G^{DF}" L"G" L"G^B"],xlabel="",legend=:outerright)
 pu_bu=plot(t,[U_DF,U,U_bu],label=[L"U^{DF}" L"U" L"U^B"],xlabel="",legend=:outerright)
 psir_bu=plot(t,[S_bu,I_bu,R_bu],label=[L"\% \Delta S" L"\% \Delta I" L"\% \Delta R"],xlabel="",legend=:outerright)
-ptightF_bu=plot(t,[Θf_DF,Θf,Θf_bu],label=[L"\Theta_f^{DF}" L"\Theta_f" L"\Theta_f^B"],xlabel="time (days)",legend=:outerright)
-ptightG_bu=plot(t,[Θg_DF,Θg,Θg_bu],label=[L"\Theta_g^{DF}" L"\Theta_g" L"\Theta_g^B"],xlabel="time (days)",legend=:outerright)
-pwf_bu=plot(t,[Wf_DF,Wf_bu],label=[L"W_f^{DF}" L"W_f^B"],xlabel="",legend=:outerright)
-pwg_bu=plot(t,[Wg_DF,Wg_bu],label=[L"W_g^{DF}" L"W_g^B"],xlabel="",legend=:outerright)
+ptightF_bu=plot(t,[Θf_DF,Θf,Θf_bu],label=[L"\Theta_f^{DF}" L"\Theta_f" L"\Theta_f^B"],xlabel="",legend=:outerright)
+ptightG_bu=plot(t,[Θg_DF,Θg,Θg_bu],label=[L"\Theta_g^{DF}" L"\Theta_g" L"\Theta_g^B"],xlabel="",legend=:outerright)
+pwf_bu=plot(t,[Wf_DF,Wf_bu],label=[L"W_f^{DF}" L"W_f^B"],xlabel="time (days)",legend=:outerright)
+pwg_bu=plot(t,[Wg_DF,Wg_bu],label=[L"W_g^{DF}" L"W_g^B"],xlabel="time (days)",legend=:outerright)
 
 plot(pf_bu,pg_bu,pu_bu,psir_bu,ptightF_bu,ptightG_bu,pwf_bu,pwg_bu,layout=(4,2))
 savefig("timeseries_bu.pdf")
