@@ -3,6 +3,10 @@
 
 This repository contains the code used for simulations and figures in "The gig economy during an epidemic: coupling disease transmission with labour market dynamics" (2025). 
 
+<b> Updates (August 25, 2025) </b>
+
+- Cleaned up (removed) old code and figures.
+
 <b> Updates (March 7, 2025) </b>
 
 
