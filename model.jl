@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, Parameters
+using DifferentialEquations, Parameters
 
 # Parameters
 T = 300 # final time
@@ -30,33 +30,33 @@ p_gig = merge(p,(;β₂ = 0.3, bg = 0.01)) # Copy p but change bg
 p_quar = merge(p,(;β₂ = 0.3, λ₁ = 1.5*0.0033)) # Copy p but with changes to λ
 
 function init_theta(du, u, p, t)
-    Θ₁,Θ₂ = u
+    ψ1,ψ2 = u
     @unpack α,β₁,β₂,βᵤ,γ,λ₁,λ₂,μ,ρ,b,c₁,c₂,d,r,y₁,y₂,bg,η,de,dg = p
-    P(Θ) = μ*(max(Θ, 1e-6))^(1-η)
-    Q(Θ) = μ*(max(Θ, 1e-6))^(-η)
-    du[1] = dΘ₁ = ((1-α)*(y₁ - b) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₁*(r+λ₁)/Q(Θ₁))
-    du[2] = dΘ₂ = ((1-α)*(y₂ - b+bg) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₂*(r+λ₂)/Q(Θ₂))
+    Θ₁ = ψ1^(1/(1-η))
+    Θ₂ = ψ2^(1/(1-η))
+    du[1] = dΘ₁ = ((1-α)*(y₁ - b) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₁*(r+λ₁)*ψ1^(η/(1-η))/μ)
+    du[2] = dΘ₂ = ((1-α)*(y₂-b+bg) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₂*(r+λ₂)*ψ2^(η/(1-η))/μ)
 end
-prob = ODEProblem(init_theta, [1,1], tspan, p)
-sol = solve(prob,saveat=0.1, Rosenbrock23(), reltol=1e-8, abstol=1e-8)
+prob = SteadyStateProblem(init_theta, [1,1], p)
+Ψ = solve(prob,SSRootfind())
 
 function econ_ode(du, u, p, t)
-    S₁,S₂,Sᵤ,Θ₁,Θ₂ = u
+    S₁,S₂,Sᵤ,ψ1,ψ2 = u
     @unpack α,β₁,β₂,βᵤ,γ,λ₁,λ₂,μ,ρ,b,c₁,c₂,d,r,y₁,y₂,bg,η = p
-    P(Θ) = μ*(max(Θ, 1e-12))^(1-η)
-    Q(Θ) = μ*(max(Θ, 1e-12))^(-η)
+    Θ₁ = ψ1^(1/(1-η))
+    Θ₂ = ψ2^(1/(1-η))
     #W(b,dI) = V_{j,s}\dot{S}_j + V_{j,i}\dot{I}_j + V_{j,r}\dot{R}_j - V_{u,s}\dot{S}_u - V_{u,i}\dot{I}_u - V_{u,r}\dot{R}_u
 
-    du[1] = dS₁ = P(Θ₁)*Sᵤ - λ₁*S₁
-    du[2] = dS₂ = P(Θ₂)*Sᵤ - λ₂*S₂
-    du[3] = 1.0-sum(u[1:3])
-    du[4] = dΘ₁ = ((1-α)*(y₁ - b) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₁*(r+λ₁)/Q(Θ₁))
-    du[5] = dΘ₂ = ((1-α)*(y₂ - b) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₂*(r+λ₂)/Q(Θ₂))
+    du[1] = dS₁ = μ*ψ1*Sᵤ - λ₁*S₁
+    du[2] = dS₂ = μ*ψ2*Sᵤ - λ₂*S₂
+    du[3] = 1.0-sum(u[1:2])
+    du[4] = dΘ₁ = ((1-α)*(y₁ - b) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₁*(r+λ₁)*ψ1^(η/(1-η))/μ)
+    du[5] = dΘ₂ = ((1-α)*(y₂ - b+bg) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₂*(r+λ₂)*ψ2^(η/(1-η))/μ)
 end
 Mecon = zeros(5,5); [Mecon[j,j] = 1 for j in [1:2...]]
     # Disease free dynamics
 econ = ODEFunction(econ_ode,mass_matrix=Mecon)
-prob = ODEProblem(econ, [0.33,0.34,0.33,1,1], (0.0,2000.0), p)
+prob = ODEProblem(econ, [0.33,0.34,0.33,Ψ...], (0.0,2000.0), p)
 sol = solve(prob,saveat=0.1, Rosenbrock23(), reltol=1e-8, abstol=1e-8)
 SE₀ = sol[end][1]
 SG₀ = sol[end][2]
@@ -66,24 +66,24 @@ SU₀ = 1.0 - SE₀ - SG₀
 
 # System of ODEs
 function epiecon_ode(du, u, p, t)
-    S₁,I₁,R₁,S₂,I₂,R₂,Sᵤ,Iᵤ,Rᵤ,Θ₁,Θ₂ = u
-    @unpack α,β₁,β₂,βᵤ,γ,λ₁,λ₂,μ,ρ,b,c₁,c₂,d,r,y₁,y₂,bg,η,de,dg,ze,zg= p
-    P(Θ) = μ*(max(Θ, 1e-12))^(1-η)
-    Q(Θ) = μ*(max(Θ, 1e-12))^(-η)
+    S₁,I₁,R₁,S₂,I₂,R₂,Sᵤ,Iᵤ,Rᵤ,ψ1,ψ2 = u
+    @unpack α,β₁,β₂,βᵤ,γ,λ₁,λ₂,μ,ρ,b,c₁,c₂,d,r,y₁,y₂,bg,η,de,dg = p
+    Θ₁ = ψ1^(1/(1-η))
+    Θ₂ = ψ2^(1/(1-η))
     #W(b,dI) = V_{j,s}\dot{S}_j + V_{j,i}\dot{I}_j + V_{j,r}\dot{R}_j - V_{u,s}\dot{S}_u - V_{u,i}\dot{I}_u - V_{u,r}\dot{R}_u
 
-    du[1] = dS₁ = ρ*R₁ - β₁*S₁*(I₁+I₂+Iᵤ) + P(Θ₁)*Sᵤ - λ₁*S₁
-    du[2] = dI₁ = β₁*S₁*(I₁+I₂+Iᵤ) - (γ+λ₁)*I₁ + P(Θ₁)*Iᵤ
-    du[3] = dR₁ = γ*I₁ - ρ*R₁ + P(Θ₁)*Rᵤ - λ₁*R₁
-    du[4] = dS₂ = ρ*R₂ - β₂*S₂*(I₁+I₂+Iᵤ) + P(Θ₂)*Sᵤ - λ₂*S₂
-    du[5] = dI₂ = β₂*S₂*(I₁+I₂+Iᵤ) - (γ+λ₂)*I₂ + P(Θ₂)*Iᵤ
-    du[6] = dR₂ = γ*I₂ - ρ*R₂ + P(Θ₂)*Rᵤ - λ₂*R₂
-    du[7] = dSᵤ = ρ*Rᵤ - βᵤ*Sᵤ*(I₁+I₂+Iᵤ) - (P(Θ₁)+P(Θ₂))*Sᵤ + λ₁*S₁+λ₂*S₂
-    du[8] = dIᵤ = βᵤ*Sᵤ*(I₁+I₂+Iᵤ) - γ*Iᵤ + λ₁*I₁ + λ₂*I₂ - (P(Θ₁)+P(Θ₂))*Iᵤ
+    du[1] = dS₁ = ρ*R₁ - β₁*S₁*(I₁+I₂+Iᵤ) +μ*ψ1*Sᵤ - λ₁*S₁
+    du[2] = dI₁ = β₁*S₁*(I₁+I₂+Iᵤ) - (γ+λ₁)*I₁ +μ*ψ1*Iᵤ
+    du[3] = dR₁ = γ*I₁ - ρ*R₁ + ψ1*Rᵤ*μ - λ₁*R₁
+    du[4] = dS₂ = ρ*R₂ - β₂*S₂*(I₁+I₂+Iᵤ) + μ*ψ2*Sᵤ - λ₂*S₂
+    du[5] = dI₂ = β₂*S₂*(I₁+I₂+Iᵤ) - (γ+λ₂)*I₂ + μ*ψ2*Iᵤ
+    du[6] = dR₂ = γ*I₂ - ρ*R₂ + μ*ψ2*Rᵤ - λ₂*R₂
+    du[7] = dSᵤ = ρ*Rᵤ - βᵤ*Sᵤ*(I₁+I₂+Iᵤ) - μ*(ψ1+ψ2)*Sᵤ + λ₁*S₁+λ₂*S₂
+    du[8] = dIᵤ = βᵤ*Sᵤ*(I₁+I₂+Iᵤ) - γ*Iᵤ + λ₁*I₁ + λ₂*I₂ - μ*(ψ1+ψ2)*Iᵤ
     # du[9] = dRᵤ = γ*Iᵤ - ρ*Rᵤ - (P(Θ₁)+P(Θ₂))*Rᵤ + λ₁*R₁ + λ₂*R₂
     du[9] = 1.0-sum(u[1:9])
-    du[10] = dΘ₁ = ((1-α)*(y₁*((S₁+R₁)/(S₁+I₁+R₁))+ze*I₁/(S₁+I₁+R₁) - b*(Sᵤ+Rᵤ)/(Sᵤ+Rᵤ+Iᵤ)-d*Iᵤ/(Sᵤ+Rᵤ+Iᵤ)+de*I₁/(S₁+I₁+R₁)) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₁*(r+λ₁)/Q(Θ₁))
-    du[11] = dΘ₂ = ((1-α)*(y₂*((S₂+R₂)/(S₂+I₂+R₂))+zg*I₂/(S₂+I₂+R₂) - b*(Sᵤ+Rᵤ)/(Sᵤ+Rᵤ+Iᵤ)-d*Iᵤ/(Sᵤ+Rᵤ+Iᵤ)+dg*I₂/(S₂+I₂+R₂))- α*c₁*Θ₁ - α*c₂*Θ₂ - c₂*(r+λ₂)/Q(Θ₂))
+    du[10] = dΘ₁ = ((1-α)*(y₁*((S₁+R₁)/(S₁+I₁+R₁)) - b) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₁*(r+λ₁)*ψ1^(η/(1-η))/μ)
+    du[11] = dΘ₂ = ((1-α)*(y₂*((S₂+R₂)/(S₂+I₂+R₂)) - b + bg) - α*c₁*Θ₁ - α*c₂*Θ₂ - c₂*(r+λ₂)*ψ2^(η/(1-η))/μ)
 end
 M = zeros(11,11); [M[j,j] = 1 for j in [1:8...]]
 # Disease free dynamics
