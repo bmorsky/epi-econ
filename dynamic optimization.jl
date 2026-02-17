@@ -50,8 +50,11 @@ cons = [bᵤ(te) ~ 0.4]#, S₁(t)+I₁(t)+R₁(t)+S₂(t)+I₂(t)+R₂(t)+Sᵤ(t
 epieconsys = mtkcompile(epieconsys, inputs = [bᵤ(t)])
 
 # Find initial conditions
-include("model.jl")
+include("modelB.jl")
 # Disease-free scenario
+p = (α = 0.5, β₁= 0.4, β₂ = 0.38, βᵤ = 0.36, γ = 1/5, η = 0.5, λ₁ = 0.001096, λ₂ = 0.005479,
+     μ = 0.01517, ρ = 0.01, b₂ = 0.2, bᵤ = 0.4, c₁ = 0.17305498516997503, c₂ = 0.07253458196414889,
+     r = 0.0001337, y₁ = 1.014065708418891, y₂ = 0.914065708418891)
 u₀ = [SF₀, 0.0, 0.0, SG₀, 0.0, 0.0, SU₀, 0.0, 0.0, Θ₁₀, Θ₂₀]
 prob = ODEProblem(epiecon, u₀, tspan, p)
 sol = solve(prob,saveat=0.1, RadauIIA5(), reltol=1e-8, abstol=1e-8)
